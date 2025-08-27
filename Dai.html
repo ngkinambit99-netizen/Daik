@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mesin Slot Simulasi</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0e172a;
+            --text-color: #ffffff;
+            --container-bg: #1f2937;
+            --container-border: #334155;
+            --highlight-color: #f7b731;
+            --button-bg: #f7b731;
+            --button-text: #1f2937;
+            --admin-bg: #4b5563;
+            --slot-display-bg: #000000;
+        }
+
+        body.light-theme {
+            --bg-color: #f3f4f6;
+            --text-color: #1f2937;
+            --container-bg: #ffffff;
+            --container-border: #d1d5db;
+            --highlight-color: #1a73e8;
+            --button-bg: #1a73e8;
+            --button-text: #ffffff;
+            --admin-bg: #e5e7eb;
+            --slot-display-bg: #e5e7eb;
+        }
+
+        body {
+            font-family: 'Roboto Mono', monospace;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            transition: background-color 0.5s;
+        }
+        
+        h1 {
+            color: var(--text-color);
+            text-shadow: 0 0 10px rgba(247, 183, 49, 0.5);
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            transition: color 0.5s;
+        }
+
+        /* CSS untuk efek kelap-kelip RGB pada teks judul */
+        .text-color-pulse {
+            animation: text-color-pulse 5s infinite;
+        }
+
+        @keyframes text-color-pulse {
+            0% { color: #ff0000; text-shadow: 0 0 10px rgba(255, 0, 0, 0.8); }
+            16.67% { color: #ffa500; text-shadow: 0 0 10px rgba(255, 165, 0, 0.8); }
+            33.34% { color: #ffff00; text-shadow: 0 0 10px rgba(255, 255, 0, 0.8); }
+            50% { color: #00ff00; text-shadow: 0 0 10px rgba(0, 255, 0, 0.8); }
+            66.67% { color: #0000ff; text-shadow: 0 0 10px rgba(0, 0, 255, 0.8); }
+            83.34% { color: #4b0082; text-shadow: 0 0 10px rgba(75, 0, 130, 0.8); }
+            100% { color: #ff0000; text-shadow: 0 0 10px rgba(255, 0, 0, 0.8); }
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 1000px;
+        }
+        
+        .slot-container {
+            background-color: var(--container-bg);
+            padding: 2.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 0 25px rgba(247, 183, 49, 0.2);
+            text-align: center;
+            border: 1px solid var(--container-border);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: background-color 0.5s, border-color 0.5s;
+        }
+        
+        .slot-display {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 2rem;
+            background-color: var(--slot-display-bg);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border: 2px solid var(--container-border);
+            position: relative;
+            overflow: hidden;
+            height: 5rem;
+            gap: 0.5rem;
+            transition: background-color 0.5s, border-color 0.5s;
+        }
+
+        .slot-reel {
+            width: 5rem;
+            height: 5rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .slot-reel-inner {
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.2s cubic-bezier(0.19, 1, 0.22, 1);
+        }
+
+        .slot-number {
+            font-size: 4rem;
+            font-weight: 700;
+            width: 5rem;
+            height: 5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-color);
+            transition: color 0.5s;
+        }
+
+        #spin-button {
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            padding: 1rem 3rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            border-radius: 9999px;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.3s, background-color 0.5s, color 0.5s;
+            box-shadow: 0 0 15px rgba(247, 183, 49, 0.4);
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        #spin-button:active {
+            transform: scale(0.95);
+            box-shadow: 0 0 20px rgba(247, 183, 49, 0.8);
+        }
+
+        #spin-button:disabled {
+            background-color: #555;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        #result-message {
+            margin-top: 1.5rem;
+            font-size: 1.25rem;
+            font-weight: 500;
+            min-height: 2rem;
+        }
+
+        /* Styles for the login modal */
+        .modal {
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: var(--container-bg);
+            color: var(--text-color);
+            padding: 2.5rem;
+            border-radius: 1rem;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            text-align: left;
+            transition: background-color 0.5s, color 0.5s;
+        }
+
+        .modal-content input {
+            color: #1f2937;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        /* Keyframes definition for the pulsing animation */
+        @keyframes pulse-highlight {
+            0% {
+                transform: scale(1);
+                filter: brightness(1);
+            }
+            50% {
+                transform: scale(1.1);
+                filter: brightness(1.5);
+            }
+            100% {
+                transform: scale(1);
+                filter: brightness(1);
+            }
+        }
+        
+        /* Class to highlight winning numbers with animation */
+        .highlight {
+            color: var(--highlight-color);
+            text-shadow: 0 0 15px rgba(247, 183, 49, 0.8);
+            animation: pulse-highlight 1.5s infinite;
+        }
+
+        /* Style for the theme toggle button for better aesthetics */
+        #theme-toggle {
+            padding: 0.5rem 1.5rem;
+            border-radius: 9999px;
+            font-weight: bold;
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s, color 0.3s, transform 0.1s;
+        }
+
+        #theme-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+    </style>
+</head>
+<body>
+    <h1 class="text-color-pulse">Mesin Slot</h1>
+    <div class="main-content">
+        <div class="slot-container">
+            <div class="slot-display">
+                <div class="slot-reel">
+                    <div id="slot-reel-1" class="slot-reel-inner"></div>
+                </div>
+                <div class="slot-reel">
+                    <div id="slot-reel-2" class="slot-reel-inner"></div>
+                </div>
+                <div class="slot-reel">
+                    <div id="slot-reel-3" class="slot-reel-inner"></div>
+                </div>
+            </div>
+            <button id="spin-button">Spin</button>
+            <div id="result-message"></div>
+    
+            <!-- Double-clickable text -->
+                  <h5 class="text-color-pulse">©Copyrigth By Dai</h5>
+            <span id="admin-trigger" class="mt-4 text-xs text-gray-500 hover:text-gray-300 cursor-pointer transition">
+                Pengaturan Admin
+            </span>
+    
+            <!-- Admin Panel (hidden by default) -->
+            <div id="admin-panel" class="mt-8 p-6 rounded-lg shadow-inner w-full text-left hidden" style="background-color: var(--admin-bg);">
+                <h2 class="text-xl font-bold mb-4">Pengaturan Admin</h2>
+                <div class="flex items-center space-x-4">
+                    <label for="win-percentage" class="text-lg">Persentase Menang (%):</label>
+                    <input type="number" id="win-percentage" class="flex-grow p-2 rounded-md text-gray-900" min="0" max="100">
+                    <button id="save-button" class="px-4 py-2 bg-blue-500 rounded-md hover:bg-blue-600 transition">Simpan</button>
+                </div>
+                <p id="admin-status" class="mt-2 text-sm text-gray-400"></p>
+            </div>
+
+            <!-- Theme Toggle Button moved to be outside of the admin panel, but still within the container -->
+            <button id="theme-toggle" class="mt-4">Beralih Tema</button>
+        </div>
+    </div>
+
+    <!-- Login Modal (hidden by default) -->
+    <div id="login-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2 class="text-2xl font-bold mb-4 text-center">Login Admin</h2>
+            <div class="space-y-4">
+                <div>
+                    <label for="username" class="block text-sm font-medium text-gray-400">Nama Pengguna</label>
+                    <input type="text" id="username" class="mt-1 block w-full p-2 rounded-md text-gray-900 bg-gray-300" placeholder="user">
+                </div>
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-400">Kata Sandi</label>
+                    <input type="password" id="password" class="mt-1 block w-full p-2 rounded-md text-gray-900 bg-gray-300" placeholder="password">
+                </div>
+                <div class="text-center">
+                    <button id="login-button" class="px-6 py-2 bg-blue-500 rounded-md hover:bg-blue-600 transition w-full">Login</button>
+                    <p id="login-status" class="mt-2 text-sm text-red-400"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global variables for Firebase (provided by Canvas)
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+        // Get HTML elements
+        const slotReel1 = document.getElementById('slot-reel-1');
+        const slotReel2 = document.getElementById('slot-reel-2');
+        const slotReel3 = document.getElementById('slot-reel-3');
+        const spinButton = document.getElementById('spin-button');
+        const resultMessage = document.getElementById('result-message');
+        const adminTrigger = document.getElementById('admin-trigger');
+        const adminPanel = document.getElementById('admin-panel');
+        const winPercentageInput = document.getElementById('win-percentage');
+        const saveButton = document.getElementById('save-button');
+        const adminStatus = document.getElementById('admin-status');
+        const loginModal = document.getElementById('login-modal');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        const loginButton = document.getElementById('login-button');
+        const loginStatus = document.getElementById('login-status');
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const body = document.body;
+
+        let db, auth;
+        let winPercentage = 5; // Default win chance is 5%
+        let isAuthReady = false;
+
+        // Function to set the theme and save to localStorage
+        function setTheme(themeName) {
+            body.classList.remove('light-theme', 'dark-theme');
+            if (themeName === 'light') {
+                body.classList.add('light-theme');
+                themeToggleBtn.textContent = "Beralih ke Gelap";
+            } else {
+                body.classList.add('dark-theme');
+                themeToggleBtn.textContent = "Beralih ke Terang";
+            }
+            localStorage.setItem('theme', themeName);
+        }
+
+        // Initialize Firebase and authentication
+        const initFirebase = async () => {
+            try {
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                console.log("Firebase initialized.");
+
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        console.log("User is authenticated:", user.uid);
+                        isAuthReady = true;
+
+                        const settingsDocRef = doc(db, `/artifacts/${appId}/public/data/slot_settings/win_percentage`);
+                        
+                        onSnapshot(settingsDocRef, (docSnap) => {
+                            if (docSnap.exists()) {
+                                winPercentage = docSnap.data().value;
+                                winPercentageInput.value = winPercentage;
+                                console.log("Win percentage updated from Firestore:", winPercentage);
+                                adminStatus.textContent = `Persentase menang saat ini: ${winPercentage}%`;
+                            } else {
+                                console.log("No win percentage found. Setting to default.");
+                                setDoc(settingsDocRef, { value: 5 });
+                            }
+                        }, (error) => {
+                            console.error("Failed to listen to settings:", error);
+                            adminStatus.textContent = "Gagal memuat pengaturan.";
+                        });
+                    } else {
+                        console.log("User is not authenticated.");
+                        isAuthReady = false;
+                        if (initialAuthToken) {
+                             await signInWithCustomToken(auth, initialAuthToken).catch(e => {
+                                 console.error("Custom token sign-in failed. Signing in anonymously.", e);
+                                 signInAnonymously(auth);
+                             });
+                        } else {
+                            signInAnonymously(auth).catch(e => {
+                                console.error("Anonymous sign-in failed:", e);
+                            });
+                        }
+                    }
+                });
+            } catch (e) {
+                console.error("Firebase initialization failed:", e);
+                adminStatus.textContent = "Gagal menginisialisasi Firebase.";
+            }
+        };
+
+        // Automatically call Firebase initialization
+        initFirebase();
+
+        // Check for saved theme on load
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        setTheme(savedTheme);
+
+        // Add event listener for the theme toggle button
+        themeToggleBtn.addEventListener('click', () => {
+            const currentTheme = body.classList.contains('light-theme') ? 'light' : 'dark';
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            setTheme(newTheme);
+        });
+
+        // Login logic (for demo)
+        const ADMIN_USER = "dai";
+        const ADMIN_PASS = "12345";
+
+        loginButton.addEventListener('click', () => {
+            const username = usernameInput.value;
+            const password = passwordInput.value;
+
+            if (username === ADMIN_USER && password === ADMIN_PASS) {
+                loginModal.classList.add('hidden');
+                adminPanel.classList.remove('hidden');
+                loginStatus.textContent = "";
+            } else {
+                loginStatus.textContent = "Nama pengguna atau kata sandi tidak valid.";
+            }
+        });
+
+        // Show modal on double-click of "Admin Settings" text
+        adminTrigger.addEventListener('dblclick', () => {
+            loginModal.classList.remove('hidden');
+        });
+
+        // Handle 'Save' button click
+        saveButton.addEventListener('click', async () => {
+            if (!isAuthReady) {
+                adminStatus.textContent = "Otentikasi belum siap. Harap tunggu.";
+                return;
+            }
+            const newWinPercentage = parseInt(winPercentageInput.value, 10);
+            if (newWinPercentage >= 0 && newWinPercentage <= 100) {
+                try {
+                    const settingsDocRef = doc(db, `/artifacts/${appId}/public/data/slot_settings/win_percentage`);
+                    await setDoc(settingsDocRef, { value: newWinPercentage });
+                    adminStatus.textContent = "Persentase menang disimpan!";
+                    console.log("Win chance saved to Firestore:", newWinPercentage);
+                } catch (e) {
+                    console.error("Error saving document:", e);
+                    adminStatus.textContent = "Gagal menyimpan. Periksa konsol.";
+                }
+            } else {
+                adminStatus.textContent = "Masukkan nilai antara 0 dan 100.";
+            }
+        });
+
+        // Function to create initial slot reel
+        function createReel(targetNumber) {
+            const numbers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+            const reelNumbers = [];
+
+            // Add random numbers
+            for (let i = 0; i < 28; i++) {
+                reelNumbers.push(numbers[Math.floor(Math.random() * numbers.length)]);
+            }
+
+            // Place the target number in the correct position to be visible when it stops
+            reelNumbers.push(targetNumber);
+            reelNumbers.push(numbers[Math.floor(Math.random() * numbers.length)]);
+
+            const reel = document.createDocumentFragment();
+            reelNumbers.forEach(num => {
+                const numberDiv = document.createElement('div');
+                numberDiv.className = 'slot-number';
+                numberDiv.textContent = num;
+                reel.appendChild(numberDiv);
+            });
+            return reel;
+        }
+
+        // Function to start the spin animation
+        async function startSpinning() {
+            // Disable the button to prevent spamming
+            spinButton.disabled = true;
+            resultMessage.textContent = "";
+            
+            const reels = [slotReel1, slotReel2, slotReel3];
+            const finalNumbers = getFinalNumbers();
+            
+            reels.forEach(reel => {
+                // Reset transition and transform before a new spin
+                reel.style.transition = 'none';
+                reel.style.transform = 'translateY(0)';
+            });
+
+            // Add a small delay for the browser to reset the transform
+            await new Promise(resolve => setTimeout(resolve, 50));
+        
+            reels.forEach((reel, index) => {
+                reel.innerHTML = '';
+                // Use the final number to create the correct reel
+                reel.appendChild(createReel(finalNumbers[index]));
+            });
+        
+            // Spin animation
+            const spinPromises = reels.map((reel, index) => {
+                return new Promise(resolve => {
+                    const totalSegments = 30;
+                    const finalIndex = (totalSegments - 2); // The 28th index (our target number)
+                    const finalY = finalIndex * 80; // 5rem = 80px
+        
+                    // Apply a new transition
+                    reel.style.transition = `transform 3s cubic-bezier(0.19, 1, 0.22, 1)`;
+                    reel.style.transform = `translateY(-${finalY}px)`;
+        
+                    reel.addEventListener('transitionend', () => {
+                        resolve();
+                    }, { once: true });
+                });
+            });
+        
+            await Promise.all(spinPromises);
+        
+            // Highlight winning numbers after all reels have stopped
+            highlightWinningNumbers(reels, finalNumbers);
+            displayResult(finalNumbers);
+        }
+        
+        // Function to highlight winning numbers
+        function highlightWinningNumbers(reels, finalNumbers) {
+            const isWin = finalNumbers[0] === finalNumbers[1] && finalNumbers[1] === finalNumbers[2];
+            // Remove the 'highlight' class from all numbers before highlighting the new ones
+            reels.forEach(reel => {
+                const allNumbers = reel.querySelectorAll('.slot-number');
+                allNumbers.forEach(num => num.classList.remove('highlight'));
+            });
+
+            if (isWin) {
+                reels.forEach(reel => {
+                    const allNumbers = reel.querySelectorAll('.slot-number');
+                    // The winning number is always at the 29th position (index 28)
+                    allNumbers[28].classList.add('highlight');
+                });
+            }
+        }
+        
+
+        // Function to get the final numbers (win or lose)
+        function getFinalNumbers() {
+            const randomChance = Math.floor(Math.random() * 100) + 1;
+            let finalNumbers = [0, 0, 0];
+
+            if (randomChance <= winPercentage) {
+                const winningNumber = Math.floor(Math.random() * 10);
+                finalNumbers = [winningNumber, winningNumber, winningNumber];
+            } else {
+                finalNumbers[0] = Math.floor(Math.random() * 10);
+                do {
+                    finalNumbers[1] = Math.floor(Math.random() * 10);
+                } while (finalNumbers[1] === finalNumbers[0]);
+                do {
+                    finalNumbers[2] = Math.floor(Math.random() * 10);
+                } while (finalNumbers[2] === finalNumbers[0] || finalNumbers[2] === finalNumbers[1]);
+            }
+            return finalNumbers;
+        }
+
+        // Function to display the result
+        function displayResult(finalNumbers) {
+            const isWin = finalNumbers[0] === finalNumbers[1] && finalNumbers[1] === finalNumbers[2];
+            if (isWin) {
+                resultMessage.textContent = "🥳 Jackpot! Anda Menang! 🎉🎊🎉🎊";
+                resultMessage.style.color = "#4ade80";
+            } else {
+                resultMessage.textContent = "Coba lagi! 😉";
+                resultMessage.style.color = "#f87171";
+            }
+            // Re-enable the button after 4 seconds (a fixed delay)
+            setTimeout(() => {
+                spinButton.disabled = false;
+            }, 4000);
+        }
+        
+        // Initialize reels when the page is loaded
+        window.onload = () => {
+            slotReel1.appendChild(createReel(0));
+            slotReel2.appendChild(createReel(0));
+            slotReel3.appendChild(createReel(0));
+        };
+        
+        // Event listener for the "Spin" button
+        spinButton.addEventListener('click', startSpinning);
+    </script>
+</body>
+</html>
